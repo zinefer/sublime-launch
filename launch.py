@@ -16,7 +16,8 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             # Project variables
             project = sublime.active_window().project_data()
             if project and ('folders' in project):
-                variables['project_folder'] = project['folders'][0]['path']
+                for folder in range(len(project['folders'])):
+                    variables['project_folder[' + str(folder) + ']'] = project['folders'][folder]['path']
 
 
         # Create a callback to be used if a replacement needs user input
@@ -29,8 +30,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             for param in range(len(parameters)):
                 parameters[param] = self.expand_variables(parameters[param], variables)
 
-            if cwd:
-                cwd = self.expand_variables(cwd, variables)
+            if cwd: cwd = self.expand_variables(cwd, variables)
         except RequireUserInputError as e:
             variable_name = e.name
             self.window.show_input_panel('Launch Input: ' + e.prompt, e.default, _input_callback, None, None)
@@ -38,10 +38,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
 
 
         # We have clean params, launch it.
-        print(command)
-        print(parameters)
-        print(cwd)
-        print(variables)
+        self.launch_it(command, parameters, cwd)
 
     def expand_variables(self, string, variables):
         ''' Inspired by sublime-text-shell-command
@@ -54,11 +51,8 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             name, default, prompt = self.parse_variable(variable_def)
 
             if not variables.get(name):
-                if prompt:
-                    raise RequireUserInputError(name, default, prompt)
-
-                if default:
-                    variables[name] = default
+                if prompt: raise RequireUserInputError(name, default, prompt)
+                if default: variables[name] = default
 
             string = string.replace(raw, variables[name])
         return string
@@ -67,8 +61,9 @@ class LaunchCommand(sublime_plugin.WindowCommand):
         parts = variable.split(':')
         return [parts[i] if i < len(parts) else None for i in range(3)]
 
-    def launch_it(command, parameters, cwd):
-        print("l")
+    def launch_it(self, command, parameters, cwd):
+        compiled_command = command + ' '.join(parameters)
+        p = subprocess.Popen(compiled_command, cwd=cwd)
 
 class RequireUserInputError(Exception):
     def __init__(self, name, default, prompt):
