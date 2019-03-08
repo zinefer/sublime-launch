@@ -18,28 +18,23 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             if project and ('folders' in project):
                 variables['project_folder'] = project['folders'][0]['path']
 
+
         # Create a callback to be used if a replacement needs user input
         def _input_callback(input):
-            variables[name] = input
+            variables[variable_name] = input
             self.run(command, parameters, cwd, variables)
 
-        for param in range(len(parameters)):
-            # Look for a variable that needs replacement
-            m = self.find_variable(parameters[param])
-            if m:
-                replace = m.group()
+        # Expand variables and ask for user input if necessary
+        try:
+            for param in range(len(parameters)):
+                parameters[param] = self.expand_variables(parameters[param], variables)
 
-                name, default, prompt = self.parse_variable(m.group(1))
-
-                if not variables.get(name):
-                    if prompt:
-                        self.window.show_input_panel('Launch Input: ' + prompt, default, _input_callback, None, None)
-                        return
-
-                    if default:
-                        variables[name] = default
-
-                parameters[param] = parameters[param].replace(replace, variables[name])
+            if cwd:
+                cwd = self.expand_variables(cwd, variables)
+        except RequireUserInputError as e:
+            variable_name = e.name
+            self.window.show_input_panel('Launch Input: ' + e.prompt, e.default, _input_callback, None, None)
+            return
 
 
         # We have clean params, launch it.
@@ -48,37 +43,35 @@ class LaunchCommand(sublime_plugin.WindowCommand):
         print(cwd)
         print(variables)
 
-    def find_variable(self, string):
-        return re.search(r'\${(.*?)}', string)
+    def expand_variables(self, string, variables):
+        ''' Inspired by sublime-text-shell-command
+        ${<variable_name>[:[default value][:<Prompt message if not exist>]]}
+        EX) git branch -m ${current_branch} ${new_branch::Enter branch name}
+        '''
+        matches = re.findall(r'\${(.*?)}', string)
+        for variable_def in matches:
+            raw = '${' + variable_def + '}'
+            name, default, prompt = self.parse_variable(variable_def)
+
+            if not variables.get(name):
+                if prompt:
+                    raise RequireUserInputError(name, default, prompt)
+
+                if default:
+                    variables[name] = default
+
+            string = string.replace(raw, variables[name])
+        return string
 
     def parse_variable(self, variable):
         parts = variable.split(':')
         return [parts[i] if i < len(parts) else None for i in range(3)]
 
-
-
-    # This function may open an input box and if it does execution needs to be terminated
-    # execution will be recreated via the callback from user input
-    def expand_variables(self, command, parameters, variables):
-        ''' Inspired by sublime-text-shell-command
-        ${<variable_name>[:[default value][:<Prompt message if not exist>]]}
-        EX) git branch -m ${current_branch} ${new_branch::Enter branch name}
-        '''
-
-        variables = {
-            "current_branch": "test"
-        }
-
-        m = re.search(r'\${(.*?)}', param)
-        if m:
-            replace = m.group()
-            name = m.group(1)
-            value = variables
-
-
-
-        # call run with new param?
-
-
-    def execute_command():
+    def launch_it(command, parameters, cwd):
         print("l")
+
+class RequireUserInputError(Exception):
+    def __init__(self, name, default, prompt):
+        self.name = name
+        self.default = default
+        self.prompt = prompt
