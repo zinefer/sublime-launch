@@ -1,6 +1,8 @@
 import os, sublime, sublime_plugin, time, subprocess
 import re
 
+import functools as ft
+
 class LaunchCommand(sublime_plugin.WindowCommand):
     def run(self, command, parameters=[], cwd=None, variables={}):
         view = self.window.active_view()
@@ -18,6 +20,11 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             if project and ('folders' in project):
                 for folder in range(len(project['folders'])):
                     variables['project_folder[' + str(folder) + ']'] = project['folders'][folder]['path']
+
+            # Selected text variable
+            if (view.sel())[0].size() > 0:
+                # Combine all selections if there are more than one
+                variables['selected_text'] = ft.reduce((lambda a, b: a + view.substr(b)), view.sel(), '')
 
 
         # Create a callback to be used if a replacement needs user input
