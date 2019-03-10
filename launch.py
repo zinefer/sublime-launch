@@ -39,6 +39,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
 
         # We have clean params, launch it.
         self.launch_it(command, parameters, cwd)
+        variables.clear()
 
     def expand_variables(self, string, variables):
         ''' Inspired by sublime-text-shell-command
@@ -63,7 +64,11 @@ class LaunchCommand(sublime_plugin.WindowCommand):
 
     def launch_it(self, command, parameters, cwd):
         compiled_command = command + ' '.join(parameters)
-        p = subprocess.Popen(compiled_command, cwd=cwd)
+        print('Launching `' + compiled_command + '`' + (' in ' + cwd) if cwd else '')
+        try:
+            p = subprocess.Popen(compiled_command, cwd=cwd)
+        except Exception as e:
+            print('Error: ' + e.strerror)
 
 class RequireUserInputError(Exception):
     def __init__(self, name, default, prompt):
