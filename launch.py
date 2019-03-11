@@ -1,7 +1,5 @@
-import os, sublime, sublime_plugin, time, subprocess
+import os, sublime, sublime_plugin, time, subprocess, functools
 import re
-
-import functools as ft
 
 class LaunchCommand(sublime_plugin.WindowCommand):
     def run(self, command, parameters=[], cwd=None, variables={}):
@@ -12,19 +10,21 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             # File variables
             file = view.file_name()
             if file:
-                variables['file_name'] = file
-                variables['file_directory'] = os.path.split(file)[0]
+                variables['file'] = file
+                variables['file_path'] = os.path.split(file)[0]
+                variables['file_name'] = os.path.basename(file)
 
             # Project variables
             project = sublime.active_window().project_data()
             if project and ('folders' in project):
+                variables['project_folder'] = project['folders'][0]['path']
                 for folder in range(len(project['folders'])):
                     variables['project_folder[' + str(folder) + ']'] = project['folders'][folder]['path']
 
             # Selected text variable
             if (view.sel())[0].size() > 0:
                 # Combine all selections if there are more than one
-                variables['selected_text'] = ft.reduce((lambda a, b: a + view.substr(b)), view.sel(), '')
+                variables['selected_text'] = functools.reduce((lambda a, b: a + view.substr(b)), view.sel(), '')
 
 
         # Create a callback to be used if a replacement needs user input
@@ -70,7 +70,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
         return [parts[i] if i < len(parts) else None for i in range(3)]
 
     def launch_it(self, command, parameters, cwd):
-        compiled_command = command + ' '.join(parameters)
+        compiled_command = ' '.join([command] + parameters)
         print('Launching `' + compiled_command + '`' + (' in ' + cwd) if cwd else '')
         try:
             p = subprocess.Popen(compiled_command, cwd=cwd)
