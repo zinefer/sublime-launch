@@ -34,6 +34,8 @@ class LaunchCommand(sublime_plugin.WindowCommand):
 
         # Expand variables and ask for user input if necessary
         try:
+            command = self.expand_variables(command, variables)
+
             for param in range(len(parameters)):
                 parameters[param] = self.expand_variables(parameters[param], variables)
 
