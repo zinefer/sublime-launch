@@ -50,3 +50,57 @@ Variable            | Description
 `project_folder`    | Path to first project folder
 `project_folder[n]` | Path to `n`th project folder
 `selected_text`     | Currently selected text(s) in sublime
+
+# Examples
+
+#### Edit selected file in Paint
+
+```json
+{
+    "caption": "Launch: Edit selected in Paint",
+    "command": "launch",
+    "args":{
+        "command": "C:\\Windows\\system32\\mspaint.exe",
+        "parameters": ["${project_folder}\\${selected_text::Image to open?}"],
+    }
+}
+```
+
+#### Open WSL Bash in current project directory
+```json
+{
+    "caption": "Launch: Bash",
+    "command": "launch",
+    "args":{
+        "command": "C:\\Windows\\System32\\wsl.exe",
+        "cwd": "${project_folder}"
+    }
+}
+```
+
+#### Open Git Gui for current project
+
+```json
+{
+    "caption": "Launch: Git Gui",
+    "command": "launch",
+    "args":{
+        "command": "C:\\Program Files\\Git\\cmd\\git-gui.exe",
+        "cwd": "${project_folder}"
+    }
+}
+```
+
+#### Stage current file in Git
+
+```json
+{
+    "caption": "Launch: Git - Stage file",
+    "command": "launch",
+    "args":{
+        "command": "git",
+        "parameters": ["add", "${file_name}"],
+        "cwd": "${project_folder}"
+    }
+}
+```
