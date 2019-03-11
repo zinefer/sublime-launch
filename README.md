@@ -47,60 +47,76 @@ Variable            | Description
 `file`              | Path to current file
 `file_path`         | Path to directory of current file
 `file_name`         | Current file name
+`file_project_path` | Path to current file relative to first project folder
+`project`           | Project name
 `project_folder`    | Path to first project folder
 `project_folder[n]` | Path to `n`th project folder
 `selected_text`     | Currently selected text(s) in sublime
 
+### Project setting variables
+
+You can set project specific variables in your project settings file by creating a key named `launch_variables`.
+
+```json
+{
+    "folders":
+    [
+        {
+          "path": "C:\\Users\\James\\Documents\\code\\sublime-launch",
+          "folder_exclude_patterns": [".git"],
+        }
+    ],
+    "launch_variables":
+    {
+        "one_variable": "is fun",
+        "two_variables": "is a party"
+    }
+}
+```
+
 # Examples
 
-#### Edit selected file in Paint
+```json5
+[
+    // Edit selected file in Paint
+    {
+        "caption": "Launch: Edit selected in Paint",
+        "command": "launch",
+        "args":{
+            "command": "C:\\Windows\\system32\\mspaint.exe",
+            "parameters": ["${project_folder}\\${selected_text::Image to open?}"],
+        }
+    },
 
-```json
-{
-    "caption": "Launch: Edit selected in Paint",
-    "command": "launch",
-    "args":{
-        "command": "C:\\Windows\\system32\\mspaint.exe",
-        "parameters": ["${project_folder}\\${selected_text::Image to open?}"],
+    //Open WSL Bash in current project directory
+    {
+        "caption": "Launch: Bash",
+        "command": "launch",
+        "args":{
+            "command": "C:\\Windows\\System32\\wsl.exe",
+            "cwd": "${project_folder}"
+        }
+    },
+
+    // Open Git Gui for current project
+    {
+        "caption": "Launch: Git Gui",
+        "command": "launch",
+        "args":{
+            "command": "C:\\Program Files\\Git\\cmd\\git-gui.exe",
+            "cwd": "${project_folder}"
+        }
+    },
+
+    // Stage current file in Git
+    {
+        "caption": "Launch: Git - Stage file",
+        "command": "launch",
+        "args":{
+            "command": "git",
+            "parameters": ["add", "${file_name}"],
+            "cwd": "${project_folder}"
+        }
     }
-}
-```
-
-#### Open WSL Bash in current project directory
-```json
-{
-    "caption": "Launch: Bash",
-    "command": "launch",
-    "args":{
-        "command": "C:\\Windows\\System32\\wsl.exe",
-        "cwd": "${project_folder}"
-    }
-}
-```
-
-#### Open Git Gui for current project
-
-```json
-{
-    "caption": "Launch: Git Gui",
-    "command": "launch",
-    "args":{
-        "command": "C:\\Program Files\\Git\\cmd\\git-gui.exe",
-        "cwd": "${project_folder}"
-    }
-}
-```
-
-#### Stage current file in Git
-
-```json
-{
-    "caption": "Launch: Git - Stage file",
-    "command": "launch",
-    "args":{
-        "command": "git",
-        "parameters": ["add", "${file_name}"],
-        "cwd": "${project_folder}"
-    }
-}
+]
 ```
