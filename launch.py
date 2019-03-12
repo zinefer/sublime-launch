@@ -2,23 +2,24 @@ import os, sublime, sublime_plugin, time, subprocess, functools
 import re
 
 class LaunchCommand(sublime_plugin.WindowCommand):
-    def run(self, command, parameters=[], cwd=None, variables={}):
+    def run(self, command, cwd=None, variables={}):
+        # Command can be string or array, the easiest way to handle is to just make it a list
+        if isinstance(command, str):
+            command = quoted_split(command)
+
         # Populate variables if we don't have any
         if not variables:
             variables = self.populate_variables()
 
-
         # Create a callback to be used if a replacement needs user input
         def _input_callback(input):
             variables[variable_name] = input
-            self.run(command, parameters, cwd, variables)
+            self.run(command, cwd, variables)
 
         # Expand variables and ask for user input if necessary
         try:
-            command = self.expand_variables(command, variables)
-
-            for param in range(len(parameters)):
-                parameters[param] = self.expand_variables(parameters[param], variables)
+            for cmd in range(len(command)):
+                command[cmd] = self.expand_variables(command[cmd], variables)
 
             if cwd: cwd = self.expand_variables(cwd, variables)
         except RequireUserInputError as e:
@@ -26,9 +27,8 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             self.window.show_input_panel('Launch Input: ' + e.prompt, e.default, _input_callback, None, None)
             return
 
-
         # We have clean params, launch it.
-        self.launch_it(command, parameters, cwd)
+        self.launch_it(command, cwd)
         variables.clear()
 
     # Inspired by sublime-text-shell-command
@@ -87,16 +87,25 @@ class LaunchCommand(sublime_plugin.WindowCommand):
         parts = variable.split(':')
         return [parts[i] if i < len(parts) else None for i in range(3)]
 
-    def launch_it(self, command, parameters, cwd):
-        if sublime.platform() == "windows" and ' ' in command:
-            command = '"' + command + '"'
+    def launch_it(self, command, cwd):
+        print('Launching `' + ' '.join(command) + '`', ('in ' + cwd if cwd else ''))
 
-        compiled_command = ' '.join([command] + parameters)
-        print('Launching `' + compiled_command + '`', ('in ' + cwd if cwd else ''))
+        if sublime.platform() == "windows":
+            command = ' '.join(command)
+
         try:
-            p = subprocess.Popen(compiled_command, cwd=cwd)
+            subprocess.Popen(command, cwd=cwd)
         except Exception as e:
             print('Error: ' + e.strerror)
+
+# https://stackoverflow.com/questions/79968/split-a-string-by-spaces-preserving-quoted-substrings-in-python
+def quoted_split(s):
+    def strip_quotes(s):
+        if s and (s[0] == '"' or s[0] == "'") and s[0] == s[-1]:
+            return s[1:-1]
+        return s
+    return [strip_quotes(p).replace('\\"', '"').replace("\\'", "'") \
+            for p in re.findall(r'"(?:\\.|[^"])*"|\'(?:\\.|[^\'])*\'|[^\s]+', s)]
 
 class RequireUserInputError(Exception):
     def __init__(self, name, default, prompt):

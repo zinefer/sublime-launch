@@ -23,8 +23,7 @@ Edit the commands file via Preferences -> Package Settings -> Launch -> Commands
 
 Argument     | Description
 ------------ | -----------
-`command`    | Application or executable path
-`parameters` | Array of parameters to call the executable with
+`command`    | Command to launch (string or array)
 `cwd`        | Current Working Directory path
 
 
@@ -83,8 +82,7 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Edit selected in Paint",
         "command": "launch",
         "args":{
-            "command": "C:\\Windows\\system32\\mspaint.exe",
-            "parameters": ["${project_folder}\\${selected_text::Image to open?}"],
+            "command": "C:\\Windows\\system32\\mspaint.exe '${project_folder}\\${selected_text::Image to open?}'",
         }
     },
 
@@ -103,7 +101,7 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Git Gui",
         "command": "launch",
         "args":{
-            "command": "C:\\Program Files\\Git\\cmd\\git-gui.exe",
+            "command": "'C:\\Program Files\\Git\\cmd\\git-gui.exe'",
             "cwd": "${project_folder}"
         }
     },
@@ -113,8 +111,7 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Git - Stage file",
         "command": "launch",
         "args":{
-            "command": "git",
-            "parameters": ["add", "${file_name}"],
+            "command": ["git", "add", "${file_name}"],
             "cwd": "${project_folder}"
         }
     }
