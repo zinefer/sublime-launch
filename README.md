@@ -1,6 +1,6 @@
 # Launch for Sublime Text
 
-Quickly launch/run applications or executables from the command palette (`Ctrl/Command+Shift+P`). You can use this to open a terminal window in the project directory or even open the selected file for editing in photoshop.
+Quickly launch/run applications or executables from the command palette (`Ctrl/⌘+Shift+P`). You can use this to open a terminal window in the project directory or even open the selected file for editing in photoshop.
 
 
 # Configuration
@@ -14,8 +14,7 @@ Edit the commands file via Preferences -> Package Settings -> Launch -> Commands
     "caption": "Launch: Git - Checkout",
     "command": "launch",
     "args":{
-        "command": "git",
-        "parameters": ["checkout", "${branch:master:Branch?}"],
+        "command": ["git", "checkout", "${branch:master:Branch?}"],
         "cwd": "${project_folder}"
     }
 }
@@ -26,6 +25,7 @@ Argument     | Description
 `command`    | Command to launch (string or array)
 `cwd`        | Current Working Directory path
 
+_Quotes will be added to command elements with spaces on Windows_
 
 ## Variables
 
@@ -58,13 +58,7 @@ You can set project specific variables in your project settings file by creating
 
 ```json
 {
-    "folders":
-    [
-        {
-          "path": "C:\\Users\\James\\Documents\\code\\sublime-launch",
-          "folder_exclude_patterns": [".git"],
-        }
-    ],
+    "folders": [],
     "launch_variables":
     {
         "one_variable": "is fun",
@@ -82,16 +76,36 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Edit selected in Paint",
         "command": "launch",
         "args":{
-            "command": "C:\\Windows\\system32\\mspaint.exe '${project_folder}\\${selected_text::Image to open?}'",
+            "command": ["C:\\Windows\\system32\\mspaint.exe", "${project_folder}\\${selected_text::Image to open?}"],
         }
     },
 
-    //Open WSL Bash in current project directory
+    // Launch WSL Terminal in project_folder
     {
-        "caption": "Launch: Bash",
+        "caption": "Launch: WSL Terminal",
         "command": "launch",
         "args":{
-            "command": "C:\\Windows\\System32\\wsl.exe",
+            "command": ["C:\\Windows\\System32\\wsl.exe"],
+            "cwd": "${project_folder}"
+        }
+    },
+
+    // Run Mac Terminal in project_folder
+    {
+        "caption": "Launch: Mac Terminal",
+        "command": "launch",
+        "args":{
+            "command": ["open", "-a", "Terminal", "${project_folder}"]
+        }
+    },
+
+
+    // Create Unix Terminal in project_folder
+    {
+        "caption": "Launch: Unix Terminal",
+        "command": "launch",
+        "args":{
+            "command": ["gnome-terminal"],
             "cwd": "${project_folder}"
         }
     },
@@ -101,7 +115,7 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Git Gui",
         "command": "launch",
         "args":{
-            "command": "'C:\\Program Files\\Git\\cmd\\git-gui.exe'",
+            "command": ["C:\\Program Files\\Git\\cmd\\git-gui.exe"],
             "cwd": "${project_folder}"
         }
     },
@@ -111,7 +125,7 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Git - Stage file",
         "command": "launch",
         "args":{
-            "command": ["git", "add", "${file_name}"],
+            "command": ["git", "add", "${file_project_path}"],
             "cwd": "${project_folder}"
         }
     }

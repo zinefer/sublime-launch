@@ -3,10 +3,6 @@ import re
 
 class LaunchCommand(sublime_plugin.WindowCommand):
     def run(self, command, cwd=None, variables={}):
-        # Command can be string or array, the easiest way to handle is to just make it a list
-        if isinstance(command, str):
-            command = quoted_split(command)
-
         # Populate variables if we don't have any
         if not variables:
             variables = self.populate_variables()
@@ -18,8 +14,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
 
         # Expand variables and ask for user input if necessary
         try:
-            for cmd in range(len(command)):
-                command[cmd] = self.expand_variables(command[cmd], variables)
+            command = [self.expand_variables(arg, variables) for arg in command]
 
             if cwd: cwd = self.expand_variables(cwd, variables)
         except RequireUserInputError as e:
@@ -56,8 +51,8 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             if 'folders' in project:
                 # Add project folders
                 variables['project_folder'] = project['folders'][0]['path']
-                for folder in range(len(project['folders'])):
-                    variables["project_folder[{0:d}]".format(folder)] = project['folders'][folder]['path']
+                for i, folder in enumerate(project['folders']):
+                    variables['project_folder[{0}]'.format(i)] = folder['path']
             if 'launch_variables' in project:
                 # Merge project variables
                 variables.update(project['launch_variables'])
@@ -73,7 +68,7 @@ class LaunchCommand(sublime_plugin.WindowCommand):
             variables['file_path'] = os.path.split(file)[0]
             variables['file_name'] = os.path.basename(file)
             if project and ('folders' in project):
-                variables['file_poject_path'] = os.path.relpath(file, project['folders'][0]['path'])
+                variables['file_project_path'] = os.path.relpath(file, project['folders'][0]['path'])
 
         # Selected text variable
         if (view.sel())[0].size() > 0:
@@ -88,24 +83,17 @@ class LaunchCommand(sublime_plugin.WindowCommand):
         return [parts[i] if i < len(parts) else None for i in range(3)]
 
     def launch_it(self, command, cwd):
-        print('Launching `' + ' '.join(command) + '`', ('in ' + cwd if cwd else ''))
-
+        # Unfortunately we have to convert command to a string and add quotes to any strings with spaces
         if sublime.platform() == "windows":
-            command = ' '.join(command)
+            command = ' '.join(map(lambda c: '{!r}'.format(c) if ' ' in c else c, command))
+
+        print('Launching', command, *['in', cwd] if cwd else '')
 
         try:
             subprocess.Popen(command, cwd=cwd)
         except Exception as e:
             print('Error: ' + e.strerror)
 
-# https://stackoverflow.com/questions/79968/split-a-string-by-spaces-preserving-quoted-substrings-in-python
-def quoted_split(s):
-    def strip_quotes(s):
-        if s and (s[0] == '"' or s[0] == "'") and s[0] == s[-1]:
-            return s[1:-1]
-        return s
-    return [strip_quotes(p).replace('\\"', '"').replace("\\'", "'") \
-            for p in re.findall(r'"(?:\\.|[^"])*"|\'(?:\\.|[^\'])*\'|[^\s]+', s)]
 
 class RequireUserInputError(Exception):
     def __init__(self, name, default, prompt):
