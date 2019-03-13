@@ -54,7 +54,7 @@ Variable            | Description
 
 ### Project setting variables
 
-You can set project specific variables in your project settings file by creating a key named `launch_variables`.
+You can set project specific variables in your project settings file by creating a key named `launch_variables`. These will get merged with the predefined variables at run time.
 
 ```json
 {
@@ -76,7 +76,10 @@ You can set project specific variables in your project settings file by creating
         "caption": "Launch: Edit selected in Paint",
         "command": "launch",
         "args":{
-            "command": ["C:\\Windows\\system32\\mspaint.exe", "${project_folder}\\${selected_text::Image to open?}"],
+            "command": [
+                "C:\\Windows\\system32\\mspaint.exe",
+                "${project_folder}\\${selected_text::Image to open?}"
+            ],
         }
     },
 
