@@ -113,6 +113,15 @@ You can set project specific variables in your project settings file by creating
         }
     },
 
+    // Open and Select current file in Explorer
+    {
+        "caption": "Launch: Open file in Explorer",
+        "command": "launch",
+        "args":{
+            "command": ["explorer", "/select,${file}"]
+        }
+    },
+
     // Open Git Gui for current project
     {
         "caption": "Launch: Git Gui",
